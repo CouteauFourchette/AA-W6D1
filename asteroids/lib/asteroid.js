@@ -4,9 +4,10 @@ import Util from './util';
 function Asteroid(options) {
   MovingObject.call(this, {
     pos: options.pos,
-    vel: Util.randomVec(4),
+    vel: Util.randomVec(2),
     radius: Asteroid.RADIUS,
     color: Asteroid.COLOR,
+    game: options.game,
   });
 }
 

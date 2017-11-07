@@ -83,11 +83,15 @@ gameView.start();
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(3);
+
+
 const MovingObject = function MovingObject(options) {
   this.pos = options.pos;
   this.vel = options.vel;
   this.radius = options.radius;
   this.color = options.color;
+  this.game = options.game;
 };
 
 MovingObject.prototype.draw = function draw(ctx) {
@@ -102,6 +106,16 @@ MovingObject.prototype.draw = function draw(ctx) {
 MovingObject.prototype.move = function move() {
   this.pos[0] += this.vel[0];
   this.pos[1] += this.vel[1];
+  this.pos = this.game.wrap(this.pos);
+};
+
+MovingObject.prototype.isCollidingWith = function isCollidingWith(otherObject) {
+  const distance = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].dist(this.pos, otherObject.pos);
+  const radiusSum = this.radius + otherObject.radius;
+  if (distance < radiusSum) {
+    return true;
+  }
+  return false;
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (MovingObject);
@@ -120,9 +134,10 @@ MovingObject.prototype.move = function move() {
 function Asteroid(options) {
   __WEBPACK_IMPORTED_MODULE_0__moving_object__["a" /* default */].call(this, {
     pos: options.pos,
-    vel: __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].randomVec(4),
+    vel: __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].randomVec(2),
     radius: Asteroid.RADIUS,
     color: Asteroid.COLOR,
+    game: options.game,
   });
 }
 
@@ -153,6 +168,12 @@ const Util = {
 
   scale(vec, m) {
     return [vec[0] * m, vec[1] * m];
+  },
+
+  dist(pos1, pos2) {
+    const [x1, y1] = pos1;
+    const [x2, y2] = pos2;
+    return Math.sqrt(((x1 - x2) ** 2) + ((y1 - y2) ** 2));
   },
 };
 
@@ -187,6 +208,7 @@ Game.prototype.addAsteroids = function addAsteroids() {
   for (let i = 0; i < Game.NUM_ASTEROIDS; i += 1) {
     const ast = new __WEBPACK_IMPORTED_MODULE_0__asteroid__["a" /* default */]({
       pos: this.randomPosition(),
+      game: this,
     });
     this.asteroids.push(ast);
   }
@@ -199,10 +221,53 @@ Game.prototype.draw = function draw(ctx) {
   });
 };
 
+Game.prototype.wrap = function wrap(pos) {
+  let [x, y] = pos;
+  if (x >= Game.DIM_X) {
+    x = 0;
+  } else if (x <= 0) {
+    x = Game.DIM_X;
+  }
+
+  if (y >= Game.DIM_Y) {
+    y = 0;
+  } else if (y <= 0) {
+    y = Game.DIM_Y;
+  }
+
+  return [x, y];
+};
+
+Game.prototype.removeAsteroid = function removeAsteroid(asteroid) {
+  const newAsteroids = [];
+  for (let i = 0; i < this.asteroids.length; i += 1) {
+    if (this.asteroids[i] !== asteroid) {
+      newAsteroids.push(this.asteroids[i]);
+    }
+  }
+  this.asteroids = newAsteroids;
+};
+
 Game.prototype.moveObjects = function moveObjects() {
   this.asteroids.forEach((ast) => {
     ast.move();
   });
+};
+
+Game.prototype.checkCollisions = function checkCollisions() {
+  for (let i = 0; i < this.asteroids.length; i += 1) {
+    for (let j = i + 1; j < this.asteroids.length; j += 1) {
+      if (this.asteroids[i].isCollidingWith(this.asteroids[j])) {
+        this.removeAsteroid(this.asteroids[j]);
+        this.removeAsteroid(this.asteroids[i]);
+      }
+    }
+  }
+};
+
+Game.prototype.step = function step() {
+  this.moveObjects();
+  this.checkCollisions();
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (Game);
@@ -223,7 +288,7 @@ const GameView = function GameView(ctx) {
 
 GameView.prototype.start = function start() {
   setInterval(() => {
-    this.game.moveObjects();
+    this.game.step();
     this.game.draw(this.ctx);
   }, 20);
 };
