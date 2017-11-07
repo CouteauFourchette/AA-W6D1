@@ -1,6 +1,5 @@
 const Util = {
   inherits(BaseClass, SuperClass) {
-    console.log(`inheriting from ${SuperClass}`);
     BaseClass.prototype = Object.create(SuperClass.prototype); // eslint-disable-line no-param-reassign
     BaseClass.prototype.constructor = BaseClass; // eslint-disable-line no-param-reassign
   },

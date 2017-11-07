@@ -1,8 +1,10 @@
 import Asteroid from './asteroid';
 import Ship from './ship';
+import Bullet from './bullet';
 
 const Game = function Game() {
   this.asteroids = [];
+  this.bullets = [];
   this.ship = new Ship({
     pos: this.randomPosition(),
     game: this,
@@ -35,6 +37,9 @@ Game.prototype.draw = function draw(ctx) {
   this.asteroids.forEach((ast) => {
     ast.draw(ctx);
   });
+  this.bullets.forEach((bull) => {
+    bull.draw(ctx);
+  })
   this.ship.draw(ctx);
 };
 
@@ -55,19 +60,54 @@ Game.prototype.wrap = function wrap(pos) {
   return [x, y];
 };
 
-Game.prototype.removeAsteroid = function removeAsteroid(asteroid) {
-  const newAsteroids = [];
-  for (let i = 0; i < this.asteroids.length; i += 1) {
-    if (this.asteroids[i] !== asteroid) {
-      newAsteroids.push(this.asteroids[i]);
+Game.prototype.addBullet = function addBullet(bullet) {
+  this.bullets.push(bullet);
+};
+
+Game.prototype.remove = function remove(object) {
+  let objects = [];
+  const newObjects = [];
+  if (object instanceof Bullet) {
+    objects = this.bullets;
+  } else if (object instanceof Asteroid) {
+    objects = this.asteroids;
+  }
+  console.log(objects);
+  for (let i = 0; i < objects.length; i += 1) {
+    if (objects[i] !== object) {
+      newObjects.push(objects[i]);
     }
   }
-  this.asteroids = newAsteroids;
+  console.log(newObjects);
+  if (object instanceof Bullet) {
+    this.bullets = newObjects;
+  } else if (object instanceof Asteroid) {
+    this.asteroids = newObjects;
+  }
+};
+
+Game.prototype.removeAsteroid = function removeAsteroid(asteroid) {
+  this.remove(asteroid);
+};
+
+Game.prototype.removeBullet = function removeBullet(bullet) {
+  this.remove(bullet);
+};
+
+Game.prototype.isOutOfBounds = function isOutOfBounds(pos) {
+  const [x, y] = pos;
+  if ((x >= Game.DIM_X) || (x <= 0) || (y >= Game.DIM_Y) || (y <= 0)) {
+    return true;
+  }
+  return false;
 };
 
 Game.prototype.moveObjects = function moveObjects() {
   this.asteroids.forEach((ast) => {
     ast.move();
+  });
+  this.bullets.forEach((bull) => {
+    bull.move();
   });
   this.ship.move();
 };
@@ -75,6 +115,9 @@ Game.prototype.moveObjects = function moveObjects() {
 Game.prototype.checkCollisions = function checkCollisions() {
   for (let i = 0; i < this.asteroids.length; i += 1) {
     this.asteroids[i].isCollidingWith(this.ship);
+    for (let j = 0; j < this.bullets.length; j += 1) {
+      this.bullets[j].isCollidingWith(this.asteroids[i]);
+    }
   }
 };
 

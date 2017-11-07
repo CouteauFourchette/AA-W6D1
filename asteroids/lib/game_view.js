@@ -7,17 +7,20 @@ const GameView = function GameView(ctx) {
 };
 
 GameView.prototype.bindKeyHandlers = function bindKeyHandlers() {
-  key('w', () => { 
-    this.ship.power([0, -0.5]);
+  key('w', () => {
+    this.ship.power([0, -1]);
   });
   key('s', () => {
-    this.ship.power([0, 0.5]);
+    this.ship.power([0, 1]);
   });
   key('a', () => {
-    this.ship.power([-0.5, 0]);
+    this.ship.power([-1, 0]);
   });
   key('d', () => {
-    this.ship.power([0.5, 0]);
+    this.ship.power([1, 0]);
+  });
+  key('space', () => {
+    this.ship.shoot();
   });
 };
 

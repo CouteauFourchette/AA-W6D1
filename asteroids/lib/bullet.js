@@ -1,20 +1,38 @@
 import MovingObject from './moving_object';
+import Asteroid from './asteroid';
 import Util from './util';
 
-function Buller(options) {
+// function setVelocity(vel) {
+//   const bulletVel = [vel[0] * 3, vel[1] * 3];
+//   return bulletVel;
+// }
+
+function Bullet(options) {
+  // const velocity = setVelocity(options.vel.slice(0));
   MovingObject.call(this, {
     pos: options.pos,
-    vel: [0, 0],
-    radius: Buller.RADIUS,
-    color: Buller.COLOR,
+    vel: options.vel,
+    radius: Bullet.RADIUS,
+    color: Bullet.COLOR,
     game: options.game,
   });
+  this.isWrappable = false;
 }
 
-Buller.COLOR = 'rgb(100,139,141)';
-Buller.RADIUS = 1;
+Bullet.COLOR = 'rgb(0, 0, 0)';
+Bullet.RADIUS = 1;
 
-Util.inherits(Buller, MovingObject);
+Util.inherits(Bullet, MovingObject);
 
-
-export default Buller;
+Bullet.prototype.isCollidingWith = function isCollidingWith(otherObject) {
+  if (otherObject instanceof Asteroid) {
+    const distance = Util.dist(this.pos, otherObject.pos);
+    const radiusSum = this.radius + otherObject.radius;
+    if (distance < radiusSum) {
+      this.game.removeAsteroid(otherObject);
+      return true;
+    }
+  }
+  return false;
+};
+export default Bullet;

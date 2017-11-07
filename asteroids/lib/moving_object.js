@@ -6,6 +6,7 @@ const MovingObject = function MovingObject(options) {
   this.radius = options.radius;
   this.color = options.color;
   this.game = options.game;
+  this.isWrappable = true;
 };
 
 MovingObject.prototype.draw = function draw(ctx) {
@@ -20,7 +21,9 @@ MovingObject.prototype.draw = function draw(ctx) {
 MovingObject.prototype.move = function move() {
   this.pos[0] += this.vel[0];
   this.pos[1] += this.vel[1];
-  this.pos = this.game.wrap(this.pos);
+  if (this.isWrappable) {
+    this.pos = this.game.wrap(this.pos);
+  }
 };
 
 MovingObject.prototype.isCollidingWith = function isCollidingWith() {
