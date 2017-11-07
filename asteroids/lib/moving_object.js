@@ -1,4 +1,4 @@
-import Util from './util';
+
 
 const MovingObject = function MovingObject(options) {
   this.pos = options.pos;
@@ -23,13 +23,7 @@ MovingObject.prototype.move = function move() {
   this.pos = this.game.wrap(this.pos);
 };
 
-MovingObject.prototype.isCollidingWith = function isCollidingWith(otherObject) {
-  const distance = Util.dist(this.pos, otherObject.pos);
-  const radiusSum = this.radius + otherObject.radius;
-  if (distance < radiusSum) {
-    return true;
-  }
-  return false;
+MovingObject.prototype.isCollidingWith = function isCollidingWith() {
 };
 
 export default MovingObject;

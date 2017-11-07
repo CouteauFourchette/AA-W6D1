@@ -1,7 +1,12 @@
 import Asteroid from './asteroid';
+import Ship from './ship';
 
 const Game = function Game() {
   this.asteroids = [];
+  this.ship = new Ship({
+    pos: this.randomPosition(),
+    game: this,
+  });
   this.addAsteroids();
 };
 
@@ -30,6 +35,7 @@ Game.prototype.draw = function draw(ctx) {
   this.asteroids.forEach((ast) => {
     ast.draw(ctx);
   });
+  this.ship.draw(ctx);
 };
 
 Game.prototype.wrap = function wrap(pos) {
@@ -63,16 +69,12 @@ Game.prototype.moveObjects = function moveObjects() {
   this.asteroids.forEach((ast) => {
     ast.move();
   });
+  this.ship.move();
 };
 
 Game.prototype.checkCollisions = function checkCollisions() {
   for (let i = 0; i < this.asteroids.length; i += 1) {
-    for (let j = i + 1; j < this.asteroids.length; j += 1) {
-      if (this.asteroids[i].isCollidingWith(this.asteroids[j])) {
-        this.removeAsteroid(this.asteroids[j]);
-        this.removeAsteroid(this.asteroids[i]);
-      }
-    }
+    this.asteroids[i].isCollidingWith(this.ship);
   }
 };
 

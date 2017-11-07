@@ -83,7 +83,6 @@ gameView.start();
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(3);
 
 
 const MovingObject = function MovingObject(options) {
@@ -109,13 +108,7 @@ MovingObject.prototype.move = function move() {
   this.pos = this.game.wrap(this.pos);
 };
 
-MovingObject.prototype.isCollidingWith = function isCollidingWith(otherObject) {
-  const distance = __WEBPACK_IMPORTED_MODULE_0__util__["a" /* default */].dist(this.pos, otherObject.pos);
-  const radiusSum = this.radius + otherObject.radius;
-  if (distance < radiusSum) {
-    return true;
-  }
-  return false;
+MovingObject.prototype.isCollidingWith = function isCollidingWith() {
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (MovingObject);
@@ -127,24 +120,39 @@ MovingObject.prototype.isCollidingWith = function isCollidingWith(otherObject) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__moving_object__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ship__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__util__ = __webpack_require__(3);
+
 
 
 
 function Asteroid(options) {
   __WEBPACK_IMPORTED_MODULE_0__moving_object__["a" /* default */].call(this, {
     pos: options.pos,
-    vel: __WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].randomVec(2),
+    vel: __WEBPACK_IMPORTED_MODULE_2__util__["a" /* default */].randomVec(2),
     radius: Asteroid.RADIUS,
     color: Asteroid.COLOR,
     game: options.game,
   });
 }
 
+
 Asteroid.COLOR = 'rgb(15,139,141)';
 Asteroid.RADIUS = 10;
 
-__WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].inherits(Asteroid, __WEBPACK_IMPORTED_MODULE_0__moving_object__["a" /* default */]);
+__WEBPACK_IMPORTED_MODULE_2__util__["a" /* default */].inherits(Asteroid, __WEBPACK_IMPORTED_MODULE_0__moving_object__["a" /* default */]);
+
+Asteroid.prototype.isCollidingWith = function isCollidingWith(otherObject) {
+  if (otherObject instanceof __WEBPACK_IMPORTED_MODULE_1__ship__["a" /* default */]) {
+    const distance = __WEBPACK_IMPORTED_MODULE_2__util__["a" /* default */].dist(this.pos, otherObject.pos);
+    const radiusSum = this.radius + otherObject.radius;
+    if (distance < radiusSum) {
+      otherObject.relocate();
+      return true;
+    }
+  }
+  return false;
+};
 
 /* harmony default export */ __webpack_exports__["a"] = (Asteroid);
 
@@ -187,10 +195,16 @@ const Util = {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__asteroid__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ship__ = __webpack_require__(7);
+
 
 
 const Game = function Game() {
   this.asteroids = [];
+  this.ship = new __WEBPACK_IMPORTED_MODULE_1__ship__["a" /* default */]({
+    pos: this.randomPosition(),
+    game: this,
+  });
   this.addAsteroids();
 };
 
@@ -219,6 +233,7 @@ Game.prototype.draw = function draw(ctx) {
   this.asteroids.forEach((ast) => {
     ast.draw(ctx);
   });
+  this.ship.draw(ctx);
 };
 
 Game.prototype.wrap = function wrap(pos) {
@@ -252,16 +267,12 @@ Game.prototype.moveObjects = function moveObjects() {
   this.asteroids.forEach((ast) => {
     ast.move();
   });
+  this.ship.move();
 };
 
 Game.prototype.checkCollisions = function checkCollisions() {
   for (let i = 0; i < this.asteroids.length; i += 1) {
-    for (let j = i + 1; j < this.asteroids.length; j += 1) {
-      if (this.asteroids[i].isCollidingWith(this.asteroids[j])) {
-        this.removeAsteroid(this.asteroids[j]);
-        this.removeAsteroid(this.asteroids[i]);
-      }
-    }
+    this.asteroids[i].isCollidingWith(this.ship);
   }
 };
 
@@ -284,9 +295,26 @@ Game.prototype.step = function step() {
 const GameView = function GameView(ctx) {
   this.ctx = ctx;
   this.game = new __WEBPACK_IMPORTED_MODULE_0__game__["a" /* default */]();
+  this.ship = this.game.ship;
+};
+
+GameView.prototype.bindKeyHandlers = function bindKeyHandlers() {
+  key('w', () => { 
+    this.ship.power([0, -0.5]);
+  });
+  key('s', () => {
+    this.ship.power([0, 0.5]);
+  });
+  key('a', () => {
+    this.ship.power([-0.5, 0]);
+  });
+  key('d', () => {
+    this.ship.power([0.5, 0]);
+  });
 };
 
 GameView.prototype.start = function start() {
+  this.bindKeyHandlers();
   setInterval(() => {
     this.game.step();
     this.game.draw(this.ctx);
@@ -294,6 +322,45 @@ GameView.prototype.start = function start() {
 };
 
 /* harmony default export */ __webpack_exports__["a"] = (GameView);
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__moving_object__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__util__ = __webpack_require__(3);
+
+
+
+function Ship(options) {
+  __WEBPACK_IMPORTED_MODULE_0__moving_object__["a" /* default */].call(this, {
+    pos: options.pos,
+    vel: [0, 0],
+    radius: Ship.RADIUS,
+    color: Ship.COLOR,
+    game: options.game,
+  });
+}
+
+Ship.COLOR = 'rgb(100,139,141)';
+Ship.RADIUS = 6;
+
+__WEBPACK_IMPORTED_MODULE_1__util__["a" /* default */].inherits(Ship, __WEBPACK_IMPORTED_MODULE_0__moving_object__["a" /* default */]);
+
+
+Ship.prototype.relocate = function relocate() {
+  this.pos = this.game.randomPosition();
+  this.vel = [0, 0];
+};
+
+Ship.prototype.power = function power(impulse) {
+  this.vel[0] += impulse[0];
+  this.vel[1] += impulse[1];
+};
+
+/* harmony default export */ __webpack_exports__["a"] = (Ship);
 
 
 /***/ })
